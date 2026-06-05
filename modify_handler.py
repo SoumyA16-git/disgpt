@@ -67,7 +67,8 @@ DISCORD.PY 2.0 CHEAT SHEET FOR LLMS:
 - Remove Role: `await member.remove_roles(role)`
 - Edit Guild: `await guild.edit(name="new_name")`
 - Delete Channel: `await channel.delete()`
-- Edit Channel Permissions: `await channel.set_permissions(role_or_member, read_messages=True, send_messages=False)`"""
+- Edit Channel Permissions: `await channel.set_permissions(role_or_member, read_messages=True, send_messages=False)`
+- Send Message to Channel: `await channel.send("Your message here")`"""
 
     @discord.app_commands.command(name="modify", description="Natural language server management")
     async def modify(self, interaction: discord.Interaction, instruction: str):

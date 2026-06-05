@@ -24,6 +24,10 @@ Language Rules:
 - If the user writes in English, reply in English.
 - NEVER reply in random languages like Norwegian, German, etc.
 
+Formatting Rules:
+- ALWAYS use standard Markdown formatting.
+- For code blocks, you MUST use triple backticks (```) without any backslashes or escapes. Example: ```python
+
 You have memory of the last 10 messages in this conversation. Do not perform any Discord server actions — you are only for chatting and answering questions."""
 
 def update_memory(user_id: int, role: str, content: str):
@@ -62,6 +66,9 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         )
         
         full_content = completion.choices[0].message.content
+        
+        # Sometimes AI escapes backticks (e.g. \```), which breaks Discord's markdown parsing.
+        full_content = full_content.replace("\\```", "```")
         
         final_text = full_content
         if not final_text:

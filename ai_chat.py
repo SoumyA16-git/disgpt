@@ -47,8 +47,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     
     client = AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY", "missing_key"),
-        timeout=40.0
+        api_key=os.getenv("OPENROUTER_API_KEY", "missing_key")
     )
     
     models_to_try = [
@@ -74,7 +73,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
                         max_tokens=2048,
                         stream=False
                     ),
-                    timeout=40.0
+                    timeout=None
                 )
                 break  # Success! Exit the loop
             except Exception as e:

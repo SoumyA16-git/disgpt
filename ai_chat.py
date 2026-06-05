@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import time
+import asyncio
 from openai import AsyncOpenAI
 
 # Memory store: { user_id: [ {"role": "...", "content": "..."} ] }
@@ -43,17 +44,21 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     
     client = AsyncOpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=os.getenv("NVIDIA_API_KEY")
+        api_key=os.getenv("NVIDIA_API_KEY"),
+        timeout=30.0
     )
     
     try:
-        completion = await client.chat.completions.create(
-            model="meta/llama-3.1-70b-instruct",
-            messages=memory_store[user_id],
-            temperature=0.7,
-            top_p=0.95,
-            max_tokens=2048,
-            stream=False
+        completion = await asyncio.wait_for(
+            client.chat.completions.create(
+                model="meta/llama-3.1-70b-instruct",
+                messages=memory_store[user_id],
+                temperature=0.7,
+                top_p=0.95,
+                max_tokens=2048,
+                stream=False
+            ),
+            timeout=30.0
         )
         
         full_content = completion.choices[0].message.content
@@ -71,6 +76,10 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         update_memory(user_id, "assistant", full_content)
         return full_content
         
+    except asyncio.TimeoutError:
+        error_msg = "⏱️ AI server is busy right now. Please try again in a few seconds!"
+        await initial_message.edit(content=error_msg)
+        return error_msg
     except Exception as e:
         error_msg = f"Error connecting to AI: {str(e)}"
         await initial_message.edit(content=error_msg)

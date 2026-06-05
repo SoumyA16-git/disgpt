@@ -50,25 +50,123 @@ Rules for code:
 6. Do not send messages directly to the interaction, just return the string.
 7. Do NOT wrap the JSON output in markdown blocks. Output raw JSON only.
 
-DISCORD.PY 2.0 CHEAT SHEET FOR LLMS:
-- List bans: `async for ban_entry in guild.bans(): user = ban_entry.user`
-- List history: `async for msg in channel.history(limit=100):`
-- Mute/Timeout: `import datetime; await member.timeout(datetime.timedelta(minutes=10), reason="...")`
-- Unmute/Remove Timeout: `await member.timeout(None)`
-- Kick/Ban: `await member.kick()`, `await member.ban()`
-- Unban: `await guild.unban(user)`
+DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
+
+=== ASYNC ITERATORS (CRITICAL - NEVER use regular 'for' or 'await' on these) ===
+- `async for ban_entry in guild.bans(): user = ban_entry.user`
+- `async for msg in channel.history(limit=100):`
+- `async for entry in guild.audit_logs(limit=100):`
+- `async for thread in channel.archived_threads():`
+
+=== MEMBER ACTIONS ===
+- Kick: `await member.kick(reason="...")`
+- Ban: `await member.ban(reason="...", delete_message_days=1)`
+- Unban: First find user with `async for ban_entry in guild.bans()`, then `await guild.unban(ban_entry.user)`
+- Timeout/Mute: `import datetime; await member.timeout(datetime.timedelta(minutes=10), reason="...")`
+- Remove Timeout/Unmute: `await member.timeout(None)`
 - Change Nickname: `await member.edit(nick="new_name")`
-- Move Voice: `await member.move_to(voice_channel)`
-- Disconnect Voice: `await member.move_to(None)`
-- Delete Multiple Messages: `await channel.delete_messages(list_of_messages)`
+- Reset Nickname: `await member.edit(nick=None)`
+- Add Role: `await member.add_roles(role, reason="...")`
+- Remove Role: `await member.remove_roles(role, reason="...")`
+- Move to Voice Channel: `await member.move_to(voice_channel)`
+- Disconnect from Voice: `await member.move_to(None)`
+- Voice Mute: `await member.edit(mute=True)`
+- Voice Unmute: `await member.edit(mute=False)`
+- Voice Deafen: `await member.edit(deafen=True)`
+- Voice Undeafen: `await member.edit(deafen=False)`
+
+=== ROLE MANAGEMENT ===
+- Create Role: `await guild.create_role(name="...", color=discord.Color.red(), hoist=True, mentionable=True)` (Do NOT pass `description` parameter - it does not exist)
 - Delete Role: `await role.delete()`
-- Create Role: `await guild.create_role(name="...", color=discord.Color.red())` (Do NOT pass a `description` parameter, roles do not have descriptions in discord.py)
-- Add Role to Member: `await member.add_roles(role)`
-- Remove Role: `await member.remove_roles(role)`
-- Edit Guild: `await guild.edit(name="new_name")`
-- Delete Channel: `await channel.delete()`
-- Edit Channel Permissions: `await channel.set_permissions(role_or_member, read_messages=True, send_messages=False)`
-- Send Message to Channel: `await channel.send("Your message here")`"""
+- Edit Role: `await role.edit(name="new_name", color=discord.Color.blue(), hoist=True, mentionable=True)`
+- Edit Role Permissions: `await role.edit(permissions=discord.Permissions(kick_members=True, ban_members=True))`
+- Move Role Position: `await role.edit(position=5)`
+- Color values: `discord.Color.red()`, `discord.Color.blue()`, `discord.Color.green()`, `discord.Color.gold()`, `discord.Color.purple()`, `discord.Color.orange()`, `discord.Color.from_rgb(255, 128, 0)`, `discord.Color(0xFF5733)`
+
+=== CHANNEL MANAGEMENT ===
+- Create Text Channel: `await guild.create_text_channel(name="channel-name", category=category_obj)`
+- Create Voice Channel: `await guild.create_voice_channel(name="channel-name", category=category_obj)`
+- Create Category: `await guild.create_category(name="Category Name")`
+- Create Forum Channel: `await guild.create_forum(name="forum-name", category=category_obj)`
+- Create Stage Channel: `await guild.create_stage_channel(name="stage-name")`
+- Delete Channel: `await channel.delete(reason="...")`
+- Edit Channel: `await channel.edit(name="new-name", topic="new topic")`
+- Set Slowmode: `await channel.edit(slowmode_delay=10)` (seconds, 0 to disable)
+- Set NSFW: `await channel.edit(nsfw=True)`
+- Move Channel to Category: `await channel.edit(category=category_obj)`
+- Set Channel Position: `await channel.edit(position=0)`
+
+=== CHANNEL PERMISSIONS ===
+- Set Permissions: `await channel.set_permissions(role_or_member, read_messages=True, send_messages=False)`
+- Lock Channel (everyone cant send): `await channel.set_permissions(guild.default_role, send_messages=False)`
+- Unlock Channel: `await channel.set_permissions(guild.default_role, send_messages=True)`
+- Hide Channel: `await channel.set_permissions(guild.default_role, view_channel=False)`
+- Show Channel: `await channel.set_permissions(guild.default_role, view_channel=True)`
+- Reset Permissions: `await channel.set_permissions(role_or_member, overwrite=None)`
+
+=== MESSAGE ACTIONS ===
+- Send Message: `await channel.send("Your message here")`
+- Send Embed: `embed = discord.Embed(title="...", description="...", color=discord.Color.blue()); await channel.send(embed=embed)`
+- Delete Single Message: `await message.delete()`
+- Bulk Delete (max 100, max 14 days old): `msgs = [msg async for msg in channel.history(limit=50)]; await channel.delete_messages(msgs)`
+- Pin Message: `await message.pin()`
+- Unpin Message: `await message.unpin()`
+- Purge Channel: `await channel.purge(limit=100)`
+- React to Message: `await message.add_reaction("👍")`
+
+=== THREAD MANAGEMENT ===
+- Create Thread: `await channel.create_thread(name="thread-name", auto_archive_duration=60)`
+- Lock Thread: `await thread.edit(locked=True)`
+- Unlock Thread: `await thread.edit(locked=False)`
+- Archive Thread: `await thread.edit(archived=True)`
+- Unarchive Thread: `await thread.edit(archived=False)`
+- Delete Thread: `await thread.delete()`
+
+=== SERVER/GUILD SETTINGS ===
+- Change Server Name: `await guild.edit(name="New Server Name")`
+- Change Server Icon: Use aiohttp: `import aiohttp; async with aiohttp.ClientSession() as s: async with s.get(url) as r: data = await r.read(); await guild.edit(icon=data)`
+- Change Server Banner: Same as icon but `await guild.edit(banner=data)`
+- Change Verification Level: `await guild.edit(verification_level=discord.VerificationLevel.medium)`
+  Levels: `none`, `low`, `medium`, `high`, `highest`
+- Change Content Filter: `await guild.edit(explicit_content_filter=discord.ContentFilter.all_members)`
+  Levels: `disabled`, `no_role`, `all_members`
+- Change AFK Channel: `await guild.edit(afk_channel=voice_channel, afk_timeout=300)`
+- Change System Channel: `await guild.edit(system_channel=text_channel)`
+- Change Default Notifications: `await guild.edit(default_notifications=discord.NotificationLevel.only_mentions)`
+
+=== EMOJI & STICKER ===
+- Create Emoji (needs image URL): `import aiohttp; async with aiohttp.ClientSession() as s: async with s.get(url) as r: data = await r.read(); await guild.create_custom_emoji(name="emoji_name", image=data)`
+- Delete Emoji: `await emoji.delete()`
+- List Emojis: `guild.emojis` (this is a tuple, not async)
+
+=== INVITE MANAGEMENT ===
+- Create Invite: `invite = await channel.create_invite(max_age=3600, max_uses=10); return f"Invite: {invite.url}"`
+- List Invites: `invites = await guild.invites()` (this is a coroutine, use await)
+- Delete Invite: `invite = await guild.vanity_invite(); await invite.delete()` or find by code
+
+=== WEBHOOK MANAGEMENT ===
+- Create Webhook: `webhook = await channel.create_webhook(name="webhook-name")`
+- Delete Webhook: `await webhook.delete()`
+- List Channel Webhooks: `webhooks = await channel.webhooks()`
+- Send via Webhook: `await webhook.send("message", username="custom-name")`
+
+=== SCHEDULED EVENTS ===
+- Create Event: `import datetime; await guild.create_scheduled_event(name="Event", start_time=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1), entity_type=discord.EntityType.voice, channel=voice_channel)`
+
+=== FINDING THINGS (always use loops, never discord.utils.get) ===
+- Find member by name: `target = None; [search for m in guild.members if name.lower() in m.name.lower() or (m.nick and name.lower() in m.nick.lower())]`
+- Find channel by name: `target = None; [search for c in guild.channels if name.lower() in c.name.lower()]`
+- Find role by name: `target = None; [search for r in guild.roles if name.lower() in r.name.lower()]`
+- guild.default_role = the @everyone role
+
+=== IMPORTANT GOTCHAS ===
+- guild.create_role() does NOT accept `description` parameter
+- channel.delete_messages() only works on messages less than 14 days old
+- Bulk delete max is 100 messages at a time
+- Timeout max duration is 28 days
+- Bot cannot timeout/kick/ban members with higher role hierarchy
+- guild.members requires Members Intent to be enabled
+- Always use `reason="..."` parameter where available for audit logs"""
 
     @discord.app_commands.command(name="modify", description="Natural language server management")
     async def modify(self, interaction: discord.Interaction, instruction: str):

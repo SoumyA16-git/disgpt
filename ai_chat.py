@@ -53,7 +53,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     
     models_to_try = [
         "meta-llama/llama-3.3-70b-instruct:free",
-        "cognitivecomputations/dolphin3.0-mistral-24b:free",
+        "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
         "qwen/qwen3-next-80b-a3b-instruct:free",
         "google/gemma-4-26b-a4b-it:free",
         "nvidia/nemotron-3-nano-30b-a3b:free"

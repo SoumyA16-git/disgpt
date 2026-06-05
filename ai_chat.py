@@ -51,24 +51,23 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         timeout=30.0
     )
     
+    models_to_try = [
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "cognitivecomputations/dolphin3.0-mistral-24b:free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
+        "google/gemma-4-26b-a4b-it:free",
+        "nvidia/nemotron-3-nano-30b-a3b:free"
+    ]
+    
+    completion = None
+    last_error = None
+    
     try:
-        try:
-            completion = await asyncio.wait_for(
-                client.chat.completions.create(
-                    model="meta-llama/llama-3.3-70b-instruct:free",
-                    messages=memory_store[user_id],
-                    temperature=0.8,
-                    top_p=0.95,
-                    max_tokens=2048,
-                    stream=False
-                ),
-                timeout=30.0
-            )
-        except Exception as e:
-            if "429" in str(e):
+        for model_id in models_to_try:
+            try:
                 completion = await asyncio.wait_for(
                     client.chat.completions.create(
-                        model="cognitivecomputations/dolphin3.0-mistral-24b:free",
+                        model=model_id,
                         messages=memory_store[user_id],
                         temperature=0.8,
                         top_p=0.95,
@@ -77,8 +76,18 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
                     ),
                     timeout=30.0
                 )
-            else:
-                raise e
+                break  # Success! Exit the loop
+            except Exception as e:
+                last_error = e
+                # Sirf server errors ya rate limit pe agla model try karo
+                error_str = str(e)
+                if any(code in error_str for code in ["429", "502", "503", "504"]):
+                    continue
+                else:
+                    raise e
+                    
+        if not completion:
+            raise last_error or Exception("All free AI models are currently busy!")
         
         full_content = completion.choices[0].message.content
         

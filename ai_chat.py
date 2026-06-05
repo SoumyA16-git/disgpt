@@ -44,7 +44,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     
     client = AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY"),
+        api_key=os.getenv("OPENROUTER_API_KEY", "missing_key"),
         timeout=30.0
     )
     

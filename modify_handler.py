@@ -31,7 +31,7 @@ class ModifyHandler(commands.Cog):
         self.bot = bot
         self.client = AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_API_KEY"),
+            api_key=os.getenv("OPENROUTER_API_KEY", "missing_key"),
             timeout=30.0
         )
         self.system_prompt = """You are a Discord server management assistant with absolute power to write discord.py code.

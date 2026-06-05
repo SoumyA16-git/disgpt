@@ -214,7 +214,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
         try:
             completion = await asyncio.wait_for(
                 self.client.chat.completions.create(
-                    model="meta-llama/llama-3.1-8b-instruct:free",
+                    model="meta-llama/llama-3.3-70b-instruct",
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": instruction}

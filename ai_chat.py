@@ -46,16 +46,15 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     update_memory(user_id, "user", prompt)
     
     client = AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY", "missing_key")
+        base_url="https://api.groq.com/openai/v1",
+        api_key=os.getenv("GROQ_API_KEY", "missing_key")
     )
     
     models_to_try = [
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-        "qwen/qwen3-next-80b-a3b-instruct:free",
-        "google/gemma-4-26b-a4b-it:free",
-        "nvidia/nemotron-3-nano-30b-a3b:free"
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "mixtral-8x7b-32768",
+        "gemma2-9b-it"
     ]
     
     completion = None

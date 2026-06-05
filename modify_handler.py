@@ -152,11 +152,43 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 
 === SCHEDULED EVENTS ===
 - Create Event: `import datetime; await guild.create_scheduled_event(name="Event", start_time=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1), entity_type=discord.EntityType.voice, channel=voice_channel)`
+- Delete Event: Find in `guild.scheduled_events` then `await event.delete()`
+- Edit Event: `await event.edit(name="New Name")`
+
+=== WARN / DM USER ===
+- Send Warning DM: `try: await member.send("⚠️ Warning: ..."); return "Warning sent via DM" except: return "Could not DM user (DMs may be closed)"`
+- Send Warning in Channel: `channel = interaction.channel; await channel.send(f"⚠️ {member.mention}, you have been warned: reason")`
+
+=== INFO QUERIES (read-only, no modifications) ===
+- Server Info: `return f"Server: {guild.name}, Members: {guild.member_count}, Created: {guild.created_at}, Boosts: {guild.premium_subscription_count}, Boost Level: {guild.premium_tier}"`
+- User Info: `return f"User: {member.name}, Joined: {member.joined_at}, Roles: {', '.join([r.name for r in member.roles])}, Created: {member.created_at}"`
+- List All Roles: `return "Roles: " + ", ".join([r.name for r in guild.roles])`
+- List All Channels: `return "Channels: " + ", ".join([c.name for c in guild.channels])`
+- List All Members: `return "Members: " + ", ".join([m.name for m in guild.members[:50]])` (limit to 50 to avoid message length)
+- Channel Info: `return f"Channel: {channel.name}, Topic: {channel.topic}, Created: {channel.created_at}, Slowmode: {channel.slowmode_delay}s"`
+- Role Info: `return f"Role: {role.name}, Color: {role.color}, Members: {len(role.members)}, Position: {role.position}"`
+
+=== CLONE CHANNEL ===
+- Clone Channel: `new_channel = await channel.clone(name="cloned-channel"); return f"Channel cloned: {new_channel.name}"`
+
+=== STICKER MANAGEMENT ===
+- Create Sticker (needs image URL and emoji): `import aiohttp; async with aiohttp.ClientSession() as s: async with s.get(url) as r: data = await r.read(); sticker_file = discord.StickerItem(...); await guild.create_sticker(name="sticker_name", description="desc", emoji="😀", file=discord.File(io.BytesIO(data), "sticker.png"))`
+- Delete Sticker: Find in `guild.stickers` then `await sticker.delete()`
+- List Stickers: `guild.stickers` (tuple, not async)
+
+=== AUTOMOD RULES ===
+- Create AutoMod Rule (block words): `await guild.create_automod_rule(name="Block Bad Words", event_type=discord.AutoModRuleEventType.message_send, trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, keyword_filter=["badword1", "badword2"]), actions=[discord.AutoModRuleAction(type=discord.AutoModRuleActionType.block_message)])`
+- List AutoMod Rules: `rules = await guild.fetch_automod_rules()`
+- Delete AutoMod Rule: `await rule.delete()`
+
+=== WELCOME SCREEN ===
+- Edit Welcome Screen: `await guild.edit(community=True); screen = guild.welcome_screen` (requires Community enabled)
 
 === FINDING THINGS (always use loops, never discord.utils.get) ===
 - Find member by name: `target = None; [search for m in guild.members if name.lower() in m.name.lower() or (m.nick and name.lower() in m.nick.lower())]`
 - Find channel by name: `target = None; [search for c in guild.channels if name.lower() in c.name.lower()]`
 - Find role by name: `target = None; [search for r in guild.roles if name.lower() in r.name.lower()]`
+- Find emoji by name: `target = None; [search for e in guild.emojis if name.lower() in e.name.lower()]`
 - guild.default_role = the @everyone role
 
 === IMPORTANT GOTCHAS ===
@@ -166,7 +198,9 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 - Timeout max duration is 28 days
 - Bot cannot timeout/kick/ban members with higher role hierarchy
 - guild.members requires Members Intent to be enabled
-- Always use `reason="..."` parameter where available for audit logs"""
+- Always use `reason="..."` parameter where available for audit logs
+- member.send() can fail if user has DMs closed - always wrap in try/except
+- When returning lists, limit output to avoid exceeding 2000 char Discord limit"""
 
     @discord.app_commands.command(name="modify", description="Natural language server management")
     async def modify(self, interaction: discord.Interaction, instruction: str):

@@ -51,6 +51,7 @@ Rules for code:
 5. In discord.py 2.0+, methods like `channel.history()`, `guild.bans()`, and `guild.audit_logs()` return AsyncIterators. You MUST use `async for item in guild.bans():` instead of regular `for` loops or `await`.
 6. Do not send messages directly to the interaction, just return the string.
 7. Do NOT wrap the JSON output in markdown blocks. Output raw JSON only.
+8. NEVER pass dictionaries with discord Objects as keys (e.g. `{role: ...}`) because it crashes JSON serialization.
 
 DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 
@@ -105,6 +106,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 - Hide Channel: `await channel.set_permissions(guild.default_role, view_channel=False)`
 - Show Channel: `await channel.set_permissions(guild.default_role, view_channel=True)`
 - Reset Permissions: `await channel.set_permissions(role_or_member, overwrite=None)`
+- CRITICAL: NEVER use `channel.edit(overwrites=...)`. ALWAYS use `channel.set_permissions()` exactly as shown above.
 
 === MESSAGE ACTIONS ===
 - Send Message: `await channel.send("Your message here")`

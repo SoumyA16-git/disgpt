@@ -52,17 +52,33 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     )
     
     try:
-        completion = await asyncio.wait_for(
-            client.chat.completions.create(
-                model="meta-llama/llama-3.3-70b-instruct:free",
-                messages=memory_store[user_id],
-                temperature=0.8,
-                top_p=0.95,
-                max_tokens=2048,
-                stream=False
-            ),
-            timeout=300.0
-        )
+        try:
+            completion = await asyncio.wait_for(
+                client.chat.completions.create(
+                    model="meta-llama/llama-3.3-70b-instruct:free",
+                    messages=memory_store[user_id],
+                    temperature=0.8,
+                    top_p=0.95,
+                    max_tokens=2048,
+                    stream=False
+                ),
+                timeout=30.0
+            )
+        except Exception as e:
+            if "429" in str(e):
+                completion = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model="cognitivecomputations/dolphin3.0-mistral-24b:free",
+                        messages=memory_store[user_id],
+                        temperature=0.8,
+                        top_p=0.95,
+                        max_tokens=2048,
+                        stream=False
+                    ),
+                    timeout=30.0
+                )
+            else:
+                raise e
         
         full_content = completion.choices[0].message.content
         

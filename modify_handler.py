@@ -62,7 +62,7 @@ DISCORD.PY 2.0 CHEAT SHEET FOR LLMS:
 - Disconnect Voice: `await member.move_to(None)`
 - Delete Multiple Messages: `await channel.delete_messages(list_of_messages)`
 - Delete Role: `await role.delete()`
-- Create Role: `await guild.create_role(name="...")`
+- Create Role: `await guild.create_role(name="...", color=discord.Color.red())` (Do NOT pass a `description` parameter, roles do not have descriptions in discord.py)
 - Add Role to Member: `await member.add_roles(role)`
 - Remove Role: `await member.remove_roles(role)`
 - Edit Guild: `await guild.edit(name="new_name")`

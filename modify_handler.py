@@ -61,7 +61,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 === MEMBER ACTIONS ===
 - Kick: `await member.kick(reason="...")`
 - Ban: `await member.ban(reason="...", delete_message_days=1)`
-- Unban: First find user with `async for ban_entry in guild.bans()`, then `await guild.unban(ban_entry.user)`
+- Unban: IMPORTANT - banned users are NOT in guild.members! You MUST search guild.bans() to find them. Example: `target_user = None; async for ban_entry in guild.bans(): if "username".lower() in ban_entry.user.name.lower(): target_user = ban_entry.user; break; if target_user: await guild.unban(target_user)`
 - Timeout/Mute: `import datetime; await member.timeout(datetime.timedelta(minutes=10), reason="...")`
 - Remove Timeout/Unmute: `await member.timeout(None)`
 - Change Nickname: `await member.edit(nick="new_name")`

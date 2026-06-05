@@ -79,9 +79,9 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
                 break  # Success! Exit the loop
             except Exception as e:
                 last_error = e
-                # Sirf server errors ya rate limit pe agla model try karo
+                # Sirf server errors, rate limit, ya timeout pe agla model try karo
                 error_str = str(e)
-                if any(code in error_str for code in ["429", "502", "503", "504"]):
+                if isinstance(e, asyncio.TimeoutError) or any(code in error_str for code in ["429", "502", "503", "504"]):
                     continue
                 else:
                     raise e

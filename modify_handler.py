@@ -4,6 +4,7 @@ import os
 from openai import AsyncOpenAI
 import json
 import asyncio
+import datetime
 from permissions import is_admin_or_mod
 from audit_log import log_action
 
@@ -39,7 +40,7 @@ Parse the user's natural language instruction and generate an asynchronous Pytho
 You MUST return ONLY a JSON object exactly matching this schema:
 {
   "is_dangerous": boolean, // True if the action deletes something, bans/kicks someone, or involves destructive changes. False for creates, edits, warnings, roles.
-  "code": "async def generated_action(guild, interaction):\\n    import discord\\n    import asyncio\\n    # YOUR CODE HERE to fulfill the instruction\\n    return 'Action executed successfully'",
+  "code": "async def generated_action(guild, interaction):\\n    import discord\\n    import asyncio\\n    import datetime\\n    # YOUR CODE HERE to fulfill the instruction\\n    return 'Action executed successfully'",
   "summary": "Short explanation of what the code does"
 }
 Rules for code:

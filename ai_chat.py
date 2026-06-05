@@ -74,12 +74,38 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         if not final_text:
             final_text = "I couldn't generate a response."
             
-        # For the final message, we can't exceed 2000 chars. If it's too long, truncate it.
-        # Handling chunked messages natively would be ideal, but for now we truncate.
-        if len(final_text) > 2000:
-            final_text = final_text[:1996] + "..."
-            
-        await initial_message.edit(content=final_text)
+        if len(final_text) <= 2000:
+            await initial_message.edit(content=final_text)
+        else:
+            chunks = []
+            text = final_text
+            in_code_block = False
+            while len(text) > 1900:
+                split_idx = text.rfind('\n', 0, 1900)
+                if split_idx == -1:
+                    split_idx = text.rfind(' ', 0, 1900)
+                if split_idx == -1:
+                    split_idx = 1900
+                    
+                chunk = text[:split_idx]
+                if chunk.count('```') % 2 != 0:
+                    in_code_block = not in_code_block
+                    
+                if in_code_block:
+                    chunk += '\n```'
+                    
+                chunks.append(chunk)
+                text = text[split_idx:].lstrip()
+                if in_code_block:
+                    text = '```\n' + text
+                    
+            if text:
+                chunks.append(text)
+                
+            await initial_message.edit(content=chunks[0])
+            for i in range(1, len(chunks)):
+                await initial_message.reply(content=chunks[i])
+                
         update_memory(user_id, "assistant", full_content)
         return full_content
         

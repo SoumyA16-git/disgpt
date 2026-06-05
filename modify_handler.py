@@ -226,7 +226,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
                 top_p=0.95,
                 max_tokens=2048,
                 ),
-                timeout=30.0
+                timeout=60.0
             )
             
             response_text = completion.choices[0].message.content.strip()
@@ -275,10 +275,13 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
             
             await log_action(self.bot, interaction.guild, interaction.user, "dynamic_action", "various", summary, True)
 
+        except asyncio.TimeoutError:
+            await interaction.followup.send("⏱️ AI took too long to generate the code (Timeout). Please try again or simplify your request.")
         except json.JSONDecodeError:
             await interaction.followup.send("Failed to parse AI response into JSON. Please try rephrasing your instruction.")
         except Exception as e:
-            await interaction.followup.send(f"An error occurred: {str(e)}")
+            error_msg = str(e) or "Unknown Error (e.g. timeout or connection drop)"
+            await interaction.followup.send(f"An error occurred: {error_msg}")
 
 async def setup(bot):
     await bot.add_cog(ModifyHandler(bot))

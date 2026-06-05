@@ -59,6 +59,17 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
             ]
         },
         {
+            "name": "GitHub Models",
+            "base_url": "https://models.inference.ai.azure.com",
+            "api_key": os.getenv("GITHUB_API_KEY"),
+            "models": [
+                "gpt-4o-mini",
+                "Meta-Llama-3.1-70B-Instruct",
+                "Meta-Llama-3.1-8B-Instruct",
+                "Cohere-command-r-plus"
+            ]
+        },
+        {
             "name": "Gemini",
             "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "api_key": os.getenv("GEMINI_API_KEY"),

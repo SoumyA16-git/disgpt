@@ -55,7 +55,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     try:
         completion = await asyncio.wait_for(
             client.chat.completions.create(
-                model="cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+                model="cognitivecomputations/dolphin3.0-mistral-24b:free",
                 messages=memory_store[user_id],
                 temperature=0.8,
                 top_p=0.95,

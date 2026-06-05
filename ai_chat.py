@@ -55,9 +55,9 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     try:
         completion = await asyncio.wait_for(
             client.chat.completions.create(
-                model="meta-llama/llama-3.3-70b-instruct",
+                model="nousresearch/hermes-3-llama-3.1-405b:free",
                 messages=memory_store[user_id],
-                temperature=0.7,
+                temperature=0.8,
                 top_p=0.95,
                 max_tokens=2048,
                 stream=False

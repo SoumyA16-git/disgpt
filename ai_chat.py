@@ -181,7 +181,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
                 
             await initial_message.edit(content=chunks[0])
             for i in range(1, len(chunks)):
-                await initial_message.reply(content=chunks[i])
+                await initial_message.reply(content=chunks[i], silent=True, mention_author=False)
                 
         update_memory(user_id, "assistant", full_content)
         return full_content
@@ -203,10 +203,10 @@ class AIChat(commands.Cog):
     async def ask(self, interaction: discord.Interaction, question: str):
         if question.lower().strip() in ["clear my memory", "forget"]:
             clear_memory(interaction.user.id)
-            await interaction.response.send_message("Memory cleared!")
+            await interaction.response.send_message("Memory cleared!", silent=True)
             return
 
-        await interaction.response.send_message("*Thinking...*")
+        await interaction.response.send_message("*Thinking...*", silent=True)
         message = await interaction.original_response()
         
         await stream_response(interaction.user.id, question, message)
@@ -214,7 +214,7 @@ class AIChat(commands.Cog):
     @discord.app_commands.command(name="forget", description="Clear your conversation memory with DisGPT")
     async def forget(self, interaction: discord.Interaction):
         clear_memory(interaction.user.id)
-        await interaction.response.send_message("I've cleared my memory of our past conversation.")
+        await interaction.response.send_message("I've cleared my memory of our past conversation.", silent=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -226,7 +226,7 @@ class AIChat(commands.Cog):
             if not content:
                 content = "Hello!"
                 
-            reply_msg = await message.reply("*Thinking...*")
+            reply_msg = await message.reply("*Thinking...*", silent=True, mention_author=False)
             await stream_response(message.author.id, content, reply_msg)
 
 async def setup(bot):

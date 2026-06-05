@@ -30,8 +30,9 @@ class ModifyHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.client = AsyncOpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=os.getenv("NVIDIA_API_KEY")
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+            timeout=30.0
         )
         self.system_prompt = """You are a Discord server management assistant with absolute power to write discord.py code.
 Parse the user's natural language instruction and generate an asynchronous Python function `async def generated_action(guild, interaction):` using `discord.py` to achieve their goal exactly.
@@ -211,8 +212,9 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
         await interaction.response.defer()
 
         try:
-            completion = await self.client.chat.completions.create(
-                model="meta/llama-3.1-8b-instruct",
+            completion = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model="meta-llama/llama-3.1-8b-instruct:free",
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": instruction}
@@ -220,6 +222,8 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
                 temperature=0.1,
                 top_p=0.95,
                 max_tokens=2048,
+                ),
+                timeout=30.0
             )
             
             response_text = completion.choices[0].message.content.strip()

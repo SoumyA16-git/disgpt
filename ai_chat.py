@@ -43,15 +43,15 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     update_memory(user_id, "user", prompt)
     
     client = AsyncOpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=os.getenv("NVIDIA_API_KEY"),
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
         timeout=30.0
     )
     
     try:
         completion = await asyncio.wait_for(
             client.chat.completions.create(
-                model="meta/llama-3.1-70b-instruct",
+                model="meta-llama/llama-3.1-405b-instruct",
                 messages=memory_store[user_id],
                 temperature=0.7,
                 top_p=0.95,

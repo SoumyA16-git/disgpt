@@ -8,6 +8,27 @@ import datetime
 from permissions import is_admin_or_mod
 from audit_log import log_action
 
+async def safe_send(channel, text):
+    """Safely sends a long message by chunking it to avoid 2000/4000 char limits."""
+    if len(text) <= 2000:
+        await channel.send(text)
+    else:
+        chunks = []
+        while len(text) > 1900:
+            split_idx = text.rfind('\n', 0, 1900)
+            if split_idx == -1:
+                split_idx = text.rfind(' ', 0, 1900)
+            if split_idx == -1:
+                split_idx = 1900
+            chunks.append(text[:split_idx])
+            text = text[split_idx:].lstrip()
+        if text:
+            chunks.append(text)
+            
+        for chunk in chunks:
+            await channel.send(chunk)
+
+
 class ConfirmView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=60)
@@ -110,6 +131,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 
 === MESSAGE ACTIONS ===
 - Send Message: `await channel.send("Your message here")`
+- CRITICAL: If sending a very long message (like server rules or long lists), Discord will throw "Must be 4000 or fewer in length" error. You MUST use the globally available `safe_send(channel, "very long string")` instead! Example: `await safe_send(channel, long_text)`
 - Send Embed: `embed = discord.Embed(title="...", description="...", color=discord.Color.blue()); await channel.send(embed=embed)`
 - Delete Single Message: `await message.delete()`
 - Bulk Delete (max 100, max 14 days old): `msgs = [msg async for msg in channel.history(limit=50)]; await channel.delete_messages(msgs)`

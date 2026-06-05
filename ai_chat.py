@@ -45,45 +45,79 @@ def clear_memory(user_id: int):
 async def stream_response(user_id: int, prompt: str, initial_message: discord.Message) -> str:
     update_memory(user_id, "user", prompt)
     
-    client = AsyncOpenAI(
-        base_url="https://api.groq.com/openai/v1",
-        api_key=os.getenv("GROQ_API_KEY", "missing_key")
-    )
-    
-    models_to_try = [
-        "llama-3.3-70b-versatile",
-        "deepseek-r1-distill-llama-70b",
-        "qwen-2.5-32b",
-        "llama-3.1-8b-instant",
-        "mixtral-8x7b-32768"
+    providers = [
+        {
+            "name": "Groq",
+            "base_url": "https://api.groq.com/openai/v1",
+            "api_key": os.getenv("GROQ_API_KEY"),
+            "models": [
+                "llama-3.3-70b-versatile",
+                "deepseek-r1-distill-llama-70b",
+                "qwen-2.5-32b",
+                "llama-3.1-8b-instant",
+                "mixtral-8x7b-32768"
+            ]
+        },
+        {
+            "name": "Gemini",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "api_key": os.getenv("GEMINI_API_KEY"),
+            "models": [
+                "gemini-2.5-flash",
+                "gemini-1.5-pro",
+                "gemini-1.5-flash"
+            ]
+        },
+        {
+            "name": "OpenRouter",
+            "base_url": "https://openrouter.ai/api/v1",
+            "api_key": os.getenv("OPENROUTER_API_KEY"),
+            "models": [
+                "meta-llama/llama-3.3-70b-instruct:free",
+                "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+                "qwen/qwen3-next-80b-a3b-instruct:free",
+                "google/gemma-4-26b-a4b-it:free"
+            ]
+        }
     ]
     
     completion = None
     last_error = None
     
     try:
-        for model_id in models_to_try:
-            try:
-                completion = await asyncio.wait_for(
-                    client.chat.completions.create(
+        for provider in providers:
+            api_key = provider["api_key"]
+            if not api_key or api_key == "missing_key":
+                continue
+                
+            client = AsyncOpenAI(
+                base_url=provider["base_url"],
+                api_key=api_key
+            )
+            
+            for model_id in provider["models"]:
+                try:
+                    # Bina strict timeout ke request
+                    completion = await client.chat.completions.create(
                         model=model_id,
                         messages=memory_store[user_id],
                         temperature=0.8,
                         top_p=0.95,
                         max_tokens=2048,
                         stream=False
-                    ),
-                    timeout=None
-                )
-                break  # Success! Exit the loop
-            except Exception as e:
-                last_error = e
-                # Sirf server errors, rate limit, ya timeout pe agla model try karo
-                error_str = str(e)
-                if isinstance(e, asyncio.TimeoutError) or any(code in error_str for code in ["429", "502", "503", "504"]):
-                    continue
-                else:
-                    raise e
+                    )
+                    break  # Success! Exit model loop
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    # Sirf Rate limit / Server errors par next model par fallback
+                    if any(code in error_str for code in ["429", "502", "503", "504"]):
+                        continue
+                    else:
+                        break # Invalid key ya other error, skip to next provider
+            
+            if completion:
+                break # Success! Exit provider loop
                     
         if not completion:
             raise last_error or Exception("All free AI models are currently busy!")

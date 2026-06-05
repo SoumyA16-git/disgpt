@@ -226,7 +226,7 @@ DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
                 top_p=0.95,
                 max_tokens=2048,
                 ),
-                timeout=60.0
+                timeout=300.0
             )
             
             response_text = completion.choices[0].message.content.strip()

@@ -62,7 +62,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
                 max_tokens=2048,
                 stream=False
             ),
-            timeout=30.0
+            timeout=300.0
         )
         
         full_content = completion.choices[0].message.content

@@ -74,9 +74,7 @@ def save_global_memory(text: str):
 memory_store = {}
 MAX_MEMORY = 10
 
-SYSTEM_PROMPT = """You are DisGPT, an extremely knowledgeable, helpful, and intelligent AI assistant living inside a Discord server.
-
-
+SYSTEM_PROMPT_BASE = """You are DisGPT, an extremely knowledgeable, helpful, and intelligent AI assistant living inside a Discord server.
 
 Your #1 priority is giving ACCURATE, DETAILED, and USEFUL answers — like a real expert would.
 - If someone asks about AC gas leak, answer like an AC technician expert with symptoms, repair steps, and costs.
@@ -94,20 +92,28 @@ Formatting Rules:
 - ALWAYS use standard Markdown formatting.
 - For code blocks, you MUST use triple backticks (```) without any backslashes or escapes. Example: ```python
 
-CRITICAL INSTRUCTION FOR MEMORY SAVING:
-- If the user tells you to "remember this", "save this", "yaad rakho", or anything similar, YOU MUST output the following exact tag at the very end of your response: [SAVE_MEMORY: <the exact fact to remember>]
-- If you do not include the square brackets and SAVE_MEMORY text, the database will FAIL to save it!
-- Example: `Sure, I will remember that! [SAVE_MEMORY: User likes Python]`
-
 CRITICAL INSTRUCTION FOR MEMORY USAGE:
 - If you use ANY information from the GLOBAL CHEAT SHEET to answer the user's question, YOU MUST output the following exact tag at the very end of your response: [USED_MEMORY]
 - Example: `Yes, your name is Avinash. [USED_MEMORY]`
 
 You have memory of the last 10 messages in this conversation. Do not perform any Discord server actions — you are only for chatting and answering questions."""
 
+SYSTEM_PROMPT_SAVE_MEMORY = """CRITICAL INSTRUCTION FOR MEMORY SAVING:
+- If the user tells you to "remember this", "save this", "yaad rakho", or anything similar, YOU MUST output the following exact tag at the very end of your response: [SAVE_MEMORY: <the exact fact to remember>]
+- If you do not include the square brackets and SAVE_MEMORY text, the database will FAIL to save it!
+- Example: `Sure, I will remember that! [SAVE_MEMORY: User likes Python]`"""
+
+def get_system_prompt_for_user(user_id: int) -> str:
+    prompt = SYSTEM_PROMPT_BASE
+    if user_id == 810848131490381824:
+        prompt += "\n\n" + SYSTEM_PROMPT_SAVE_MEMORY
+    else:
+        prompt += "\n\nCRITICAL INSTRUCTION: You are NOT allowed to save memories for this user. If they ask you to remember or save anything, you MUST reject it by ONLY replying exactly: 'Ek Gaand Pe Raapta Marunga na, Toh Sadak pe Hag ta phirega '. Do NOT use the [SAVE_MEMORY] tag."
+    return prompt
+
 def update_memory(user_id: int, role: str, content: str):
     if user_id not in memory_store:
-        memory_store[user_id] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        memory_store[user_id] = [{"role": "system", "content": get_system_prompt_for_user(user_id)}]
     
     memory_store[user_id].append({"role": role, "content": content})
     
@@ -126,7 +132,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
     update_memory(user_id, "user", prompt)
     
     # Inject latest global memory into system prompt
-    base_prompt = SYSTEM_PROMPT
+    base_prompt = get_system_prompt_for_user(user_id)
     if global_memory_cache:
         base_prompt += f"\n\n--- GLOBAL CHEAT SHEET (Permanent Memory) ---\n{global_memory_cache}\n--------------------------------------------"
     memory_store[user_id][0]["content"] = base_prompt

@@ -50,20 +50,25 @@ def load_global_memory():
 
 def save_global_memory(text: str):
     global global_memory_cache
+    print(f"DEBUG DB: Entering save_global_memory with text={text}", flush=True)
     if not db_enabled:
+        print("DEBUG DB: db_enabled is False! Returning silently without saving.", flush=True)
         return
     try:
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        db_url = os.getenv("DATABASE_URL")
+        print(f"DEBUG DB: Attempting connection. DB_URL present: {bool(db_url)}", flush=True)
+        conn = psycopg2.connect(db_url)
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute("INSERT INTO global_memory (memory_text) VALUES (%s)", (text,))
         conn.close()
+        print("DEBUG DB: Insert successful!", flush=True)
         if global_memory_cache:
             global_memory_cache += f"\n{text}"
         else:
             global_memory_cache = text
     except Exception as e:
-        print(f"Failed to save global memory: {e}", flush=True)
+        print(f"DEBUG DB: Failed to save global memory! Exception: {e}", flush=True)
 
 # Memory store: { user_id: [ {"role": "...", "content": "..."} ] }
 memory_store = {}
@@ -93,6 +98,10 @@ CRITICAL INSTRUCTION FOR MEMORY SAVING:
 - If the user tells you to "remember this", "save this", "yaad rakho", or anything similar, YOU MUST output the following exact tag at the very end of your response: [SAVE_MEMORY: <the exact fact to remember>]
 - If you do not include the square brackets and SAVE_MEMORY text, the database will FAIL to save it!
 - Example: `Sure, I will remember that! [SAVE_MEMORY: User likes Python]`
+
+CRITICAL INSTRUCTION FOR MEMORY USAGE:
+- If you use ANY information from the GLOBAL CHEAT SHEET to answer the user's question, YOU MUST output the following exact tag at the very end of your response: [USED_MEMORY]
+- Example: `Yes, your name is Avinash. [USED_MEMORY]`
 
 You have memory of the last 10 messages in this conversation. Do not perform any Discord server actions — you are only for chatting and answering questions."""
 
@@ -215,6 +224,13 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         if not full_content:
             full_content = "I couldn't generate a response."
             
+        # Check for USED_MEMORY tag
+        used_match = re.search(r'\[USED_MEMORY\]', full_content, re.IGNORECASE)
+        used_memory_flag = False
+        if used_match:
+            used_memory_flag = True
+            full_content = full_content.replace(used_match.group(0), "").strip()
+            
         # Check for SAVE_MEMORY tag
         save_match = re.search(r'\[SAVE_MEMORY:\s*(.*?)\]', full_content, re.IGNORECASE | re.DOTALL)
         saved_text = None
@@ -238,6 +254,8 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
         footer = f"\n\n-# {used_model}"
         if saved_text:
             footer += " | 💾 Information permanently saved to cheat sheet!"
+        if used_memory_flag:
+            footer += " | 🗄️ Fetched from DB"
             
         full_content += footer
         

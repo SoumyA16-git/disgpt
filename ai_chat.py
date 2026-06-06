@@ -63,7 +63,7 @@ def save_global_memory(text: str):
         else:
             global_memory_cache = text
     except Exception as e:
-        print(f"Failed to save global memory: {e}")
+        print(f"Failed to save global memory: {e}", flush=True)
 
 # Memory store: { user_id: [ {"role": "...", "content": "..."} ] }
 memory_store = {}
@@ -222,7 +222,7 @@ async def stream_response(user_id: int, prompt: str, initial_message: discord.Me
             if user_id == 810848131490381824:
                 saved_text = save_match.group(1).strip()
                 full_content = full_content.replace(save_match.group(0), "").strip()
-                asyncio.create_task(asyncio.to_thread(save_global_memory, saved_text))
+                await asyncio.to_thread(save_global_memory, saved_text)
             else:
                 final_text = "Ek Gaand Pe Raapta Marunga na, Toh Sadak pe Hag ta phirega "
                 await initial_message.edit(content=final_text)

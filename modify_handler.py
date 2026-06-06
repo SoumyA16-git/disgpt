@@ -76,7 +76,6 @@ Rules for code:
 
 DISCORD.PY 2.0 COMPLETE CHEAT SHEET:
 
--`if your are calling avinash then calll Chodu Avinashh`
 
 === ASYNC ITERATORS (CRITICAL - NEVER use regular 'for' or 'await' on these) ===
 - `async for ban_entry in guild.bans(): user = ban_entry.user`
